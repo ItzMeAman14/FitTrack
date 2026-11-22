@@ -8,6 +8,15 @@
       name="description"
       content="Personal fitness operating system for diet planning, workout splits, body measurements, progress analytics, and Gemini AI coaching."
     />
+    <meta name="theme-color" content="#090B0F" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="FitTrack" />
+
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta property="og:title" content="FitTrack — Personal Fitness Operating System" />
     <meta
       property="og:description"
@@ -25,6 +34,15 @@
   <body class="bg-[#090B0F] text-[#F5F7FA] antialiased selection:bg-[#B6F36A] selection:text-[#090B0F]">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch((err) => {
+            console.warn('PWA service worker registration failed:', err);
+          });
+        });
+      }
+    </script>
   </body>
 </html>
 
