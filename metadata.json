@@ -1,0 +1,6 @@
+{
+  "name": "FitTrack",
+  "description": "Personal fitness operating system for diet planning, workout splits, body measurements, progress analytics, and Gemini AI coaching.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

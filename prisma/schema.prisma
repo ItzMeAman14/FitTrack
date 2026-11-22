@@ -1,0 +1,415 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum FitnessGoal {
+  FAT_LOSS
+  MUSCLE_GAIN
+  MAINTENANCE
+  RECOMPOSITION
+}
+
+enum ActivityLevel {
+  SEDENTARY
+  LIGHTLY_ACTIVE
+  MODERATELY_ACTIVE
+  VERY_ACTIVE
+  EXTREMELY_ACTIVE
+}
+
+enum WeightUnit {
+  KG
+  LBS
+}
+
+enum MeasurementUnit {
+  CM
+  INCHES
+}
+
+enum DayOfWeek {
+  MON
+  TUE
+  WED
+  THU
+  FRI
+  SAT
+  SUN
+}
+
+enum DietTag {
+  VEG
+  NON_VEG
+  VEGAN
+  SUPPLEMENT
+}
+
+enum MuscleGroup {
+  CHEST
+  BACK
+  LEGS
+  SHOULDERS
+  ARMS
+  CORE
+  CARDIO
+}
+
+enum SavedPlanType {
+  DIET
+  WORKOUT
+}
+
+enum AiProposalType {
+  MODIFY_DIET_PLAN
+  MODIFY_WORKOUT_PLAN
+  CREATE_NEW_PLAN
+  ACTIVATE_SAVED_PLAN
+  UPDATE_TARGETS
+  LOG_FOOD
+  LOG_MEASUREMENT
+}
+
+enum AiProposalStatus {
+  PENDING
+  APPROVED
+  CANCELLED
+  EXPIRED
+}
+
+enum AiAuditAction {
+  PROPOSED
+  APPROVED
+  CANCELLED
+  EXPIRED
+}
+
+enum AiMessageRole {
+  user
+  assistant
+}
+
+model User {
+  id               String              @id
+  name             String
+  email            String              @unique
+  passwordHash     String
+  avatarUrl        String?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  profile          FitnessProfile?
+  sessions         Session[]
+  foods            FoodItem[]
+  plannedMeals     PlannedMeal[]
+  mealLogs         MealLog[]
+  exercises        Exercise[]
+  workoutSplits    WorkoutDaySplit[]
+  workoutSessions  WorkoutSession[]
+  measurements     BodyMeasurement[]
+  savedPlans       SavedPlan[]
+  aiMessages       AiMessage[]
+  pendingProposals AiPendingProposal[]
+  aiAuditLogs      AiAuditLog[]
+  aiModels         UserAiModel[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id
+  userId    String
+  tokenHash String   @unique
+  userAgent String?
+  ipAddress String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model FitnessProfile {
+  id                   String          @id
+  userId               String          @unique
+  age                  Int?
+  gender               Gender?
+  heightCm             Float?
+  startingWeightKg     Float?
+  currentWeightKg      Float?
+  targetWeightKg       Float?
+  targetWaistCm        Float?
+  targetBodyFatPct     Float?
+  fitnessGoal          FitnessGoal     @default(MAINTENANCE)
+  activityLevel        ActivityLevel   @default(MODERATELY_ACTIVE)
+  dailyCalorieTarget   Int?
+  dailyProteinTargetG  Int?
+  dailyCarbTargetG     Int?
+  dailyFatTargetG      Int?
+  preferredWeightUnit  WeightUnit      @default(KG)
+  preferredMeasureUnit MeasurementUnit @default(CM)
+  currency             String          @default("INR")
+  timezone             String          @default("Asia/Kolkata")
+  theme                String          @default("dark")
+  geminiEnabled        Boolean         @default(true)
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+  user                 User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("fitness_profiles")
+}
+
+model FoodItem {
+  id           String   @id
+  userId       String
+  name         String
+  category     DietTag
+  servingLabel String
+  servingGrams Float
+  calories     Float
+  proteinG     Float
+  carbsG       Float
+  fatG         Float
+  priceInr     Float
+  isDefault    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("foods")
+}
+
+model PlannedMeal {
+  id     String            @id
+  userId String
+  name   String
+  time   String
+  user   User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items  PlannedMealItem[]
+
+  @@index([userId])
+  @@map("planned_meals")
+}
+
+model PlannedMealItem {
+  id           String      @id
+  mealId       String
+  sortOrder    Int         @default(0)
+  foodId       String
+  foodName     String
+  servings     Float
+  servingLabel String
+  calories     Float
+  proteinG     Float
+  carbsG       Float
+  fatG         Float
+  priceInr     Float
+  meal         PlannedMeal @relation(fields: [mealId], references: [id], onDelete: Cascade)
+
+  @@index([mealId])
+  @@map("planned_meal_items")
+}
+
+model MealLog {
+  id            String   @id
+  userId        String
+  date          String
+  mealName      String
+  time          String
+  foodId        String?
+  foodName      String
+  servings      Float
+  servingLabel  String
+  calories      Float
+  proteinG      Float
+  carbsG        Float
+  fatG          Float
+  priceInr      Float
+  plannedMealId String?
+  createdAt     DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@map("meal_logs")
+}
+
+model Exercise {
+  id                 String      @id
+  userId             String
+  name               String
+  muscleGroup        MuscleGroup
+  equipment          String
+  defaultSets        Int
+  defaultReps        String
+  defaultRestSeconds Int         @default(90)
+  defaultWeightKg    Float?
+  instructions       String      @default("")
+  imageUrl           String?
+  videoUrl           String?
+  isDefault          Boolean     @default(false)
+  createdAt          DateTime    @default(now())
+  user               User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("exercises")
+}
+
+model WorkoutDaySplit {
+  id        String          @id @default(cuid())
+  userId    String
+  day       DayOfWeek
+  focus     String
+  isRestDay Boolean         @default(false)
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercises SplitExercise[]
+
+  @@unique([userId, day])
+  @@map("workout_day_splits")
+}
+
+model SplitExercise {
+  id             String          @id
+  daySplitId     String
+  sortOrder      Int             @default(0)
+  exerciseId     String
+  exerciseName   String
+  muscleGroup    MuscleGroup
+  targetSets     Int
+  targetReps     String
+  restSeconds    Int
+  targetWeightKg Float?
+  instructions   String?
+  imageUrl       String?
+  videoUrl       String?
+  daySplit       WorkoutDaySplit @relation(fields: [daySplitId], references: [id], onDelete: Cascade)
+
+  @@index([daySplitId])
+  @@map("split_exercises")
+}
+
+model WorkoutSession {
+  id              String    @id
+  userId          String
+  date            String
+  day             DayOfWeek
+  title           String
+  durationMinutes Int
+  totalVolumeKg   Int
+  notes           String    @default("")
+  exercises       Json
+  createdAt       DateTime  @default(now())
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@map("workout_sessions")
+}
+
+model BodyMeasurement {
+  id                 String   @id
+  userId             String
+  date               String
+  weightKg           Float?
+  bodyFatPct         Float?
+  waistCm            Float?
+  chestCm            Float?
+  hipsCm             Float?
+  armsCm             Float?
+  thighsCm           Float?
+  neckCm             Float?
+  calvesCm           Float?
+  customMeasurements Json     @default("[]")
+  photoDataUrl       String?
+  notes              String   @default("")
+  createdAt          DateTime @default(now())
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@map("body_measurements")
+}
+
+model SavedPlan {
+  id          String        @id
+  userId      String
+  type        SavedPlanType
+  name        String
+  description String        @default("")
+  payload     Json
+  createdAt   DateTime      @default(now())
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("saved_plans")
+}
+
+model AiMessage {
+  id        String        @id
+  userId    String
+  role      AiMessageRole
+  content   String
+  proposal  Json?
+  createdAt DateTime      @default(now())
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("ai_messages")
+}
+
+model AiPendingProposal {
+  id         String           @id
+  userId     String
+  messageId  String           @unique
+  status     AiProposalStatus @default(PENDING)
+  proposal   Json
+  expiresAt  DateTime
+  createdAt  DateTime         @default(now())
+  resolvedAt DateTime?
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("ai_pending_proposals")
+}
+
+model AiAuditLog {
+  id           String         @id
+  userId       String
+  proposalId   String
+  type         AiProposalType
+  action       AiAuditAction
+  editedByUser Boolean        @default(false)
+  summary      String
+  details      Json
+  createdAt    DateTime       @default(now())
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("ai_audit_logs")
+}
+
+model UserAiModel {
+  id              String   @id
+  userId          String
+  label           String
+  provider        String
+  modelName       String
+  baseUrl         String?
+  encryptedApiKey String
+  keyPreview      String
+  isDefault       Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("user_ai_models")
+}
+
