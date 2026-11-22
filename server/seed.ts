@@ -30,14 +30,9 @@ export interface SeededAccountSpec {
  * (e.g. `SEEDED_EMAILS="sister@gmail.com,Rahul <rahul@gmail.com>"`).
  */
 export const SEEDED_ACCOUNTS: SeededAccountSpec[] = [
-  { name: 'Aman', email: 'aman@astreait.com' },
+  { name: 'Aman Rehman', email: 'aman@gmail.com' },
   { name: 'Kaleem Ahmed', email: 'kaleemahmed@gmail.com' },
-  { name: 'Hamza Ahmed', email: 'hamzaahmed@gmail.com' },
-  { name: 'Family Member 1', email: 'family1@fittrack.app' },
-  { name: 'Family Member 2', email: 'family2@fittrack.app' },
-  { name: 'Friend 1', email: 'friend1@fittrack.app' },
-  { name: 'Friend 2', email: 'friend2@fittrack.app' },
-  { name: 'Guest', email: 'guest@fittrack.app' },
+  { name: 'Mohd Owais', email: 'mohdowais@gmail.com' },
 ];
 
 function parseSeededEmailsEnv(raw: string | undefined): SeededAccountSpec[] {
